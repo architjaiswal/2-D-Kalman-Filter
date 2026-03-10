@@ -24,7 +24,7 @@ def main():
     #Create KalmanFilter object KF
     #KalmanFilter(dt, u_x, u_y, std_acc, x_std_meas, y_std_meas)
 
-    KF = KalmanFilter(0.01, 100, 100, 20, 0.1, 0.1)
+    KF = KalmanFilter(0.1, 1, 1, 1, 0.1, 0.1)
 
     debugMode=1
 
