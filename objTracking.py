@@ -17,14 +17,14 @@ def main():
     VideoCap = cv2.VideoCapture('video/randomball.avi')
 
     #Variable used to control the speed of reading the video
-    ControlSpeedVar = 100  #Lowest: 1 - Highest:100
+    ControlSpeedVar = 50  #Lowest: 1 - Highest:100
 
     HiSpeed = 100
 
     #Create KalmanFilter object KF
     #KalmanFilter(dt, u_x, u_y, std_acc, x_std_meas, y_std_meas)
 
-    KF = KalmanFilter(0.1, 1, 1, 1, 0.1,0.1)
+    KF = KalmanFilter(0.01, 100, 100, 20, 0.1, 0.1)
 
     debugMode=1
 
