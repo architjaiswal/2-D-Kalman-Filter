@@ -10,62 +10,114 @@
 import cv2
 from Detector import detect
 from KalmanFilter import KalmanFilter
+import matplotlib.pyplot as plt
 
 def main():
 
-    # Create opencv video capture object
     VideoCap = cv2.VideoCapture('video/randomball.avi')
 
-    #Variable used to control the speed of reading the video
-    ControlSpeedVar = 50  #Lowest: 1 - Highest:100
-
+    ControlSpeedVar = 100
     HiSpeed = 100
-
-    #Create KalmanFilter object KF
-    #KalmanFilter(dt, u_x, u_y, std_acc, x_std_meas, y_std_meas)
 
     KF = KalmanFilter(0.1, 1, 1, 1, 0.1, 0.1)
 
-    debugMode=1
+    debugMode = 1
+
+    # Logging arrays
+    true_x, true_y = [], []
+    pred_x, pred_y = [], []
+    est_x, est_y = [], []
+
+    frame_idx = []
+
+    i = 0
 
     while(True):
-        # Read frame
+
         ret, frame = VideoCap.read()
+        if not ret:
+            break
 
-        # Detect object
-        centers = detect(frame,debugMode)
+        centers = detect(frame, debugMode)
 
-        # If centroids are detected then track them
         if (len(centers) > 0):
 
-            # Draw the detected circle
-            cv2.circle(frame, (int(centers[0][0]), int(centers[0][1])), 10, (0, 191, 255), 2)
+            # measured (true)
+            mx, my = centers[0]
+
+            # draw measured position
+            cv2.circle(frame, (int(mx), int(my)), 10, (0,191,255), 2)
 
             # Predict
-            (x, y) = KF.predict()
-            # Draw a rectangle as the predicted object position
-            cv2.rectangle(frame, (int(x - 15), int(y - 15)), (int(x + 15), int(y + 15)), (255, 0, 0), 2)
+            (px, py) = KF.predict()
+
+            cv2.rectangle(frame,
+                          (int(px - 15), int(py - 15)),
+                          (int(px + 15), int(py + 15)),
+                          (255, 0, 0), 2)
 
             # Update
-            (x1, y1) = KF.update(centers[0])
+            (ux, uy) = KF.update(centers[0])
 
-            # Draw a rectangle as the estimated object position
-            cv2.rectangle(frame, (int(x1 - 15), int(y1 - 15)), (int(x1 + 15), int(y1 + 15)), (0, 0, 255), 2)
+            cv2.rectangle(frame,
+                          (int(ux - 15), int(uy - 15)),
+                          (int(ux + 15), int(uy + 15)),
+                          (0, 0, 255), 2)
 
-            cv2.putText(frame, "Estimated Position", (int(x1 + 15), int(y1 + 10)), 0, 0.5, (0, 0, 255), 2)
-            cv2.putText(frame, "Predicted Position", (int(x + 15), int(y)), 0, 0.5, (255, 0, 0), 2)
-            cv2.putText(frame, "Measured Position", (int(centers[0][0] + 15), int(centers[0][1] - 15)), 0, 0.5, (0,191,255), 2)
+            cv2.putText(frame,"Estimated Position",(int(ux+15),int(uy+10)),0,0.5,(0,0,255),2)
+            cv2.putText(frame,"Predicted Position",(int(px+15),int(py)),0,0.5,(255,0,0),2)
+            cv2.putText(frame,"Measured Position",(int(mx+15),int(my-15)),0,0.5,(0,191,255),2)
+
+            # Save data
+            frame_idx.append(i)
+
+            true_x.append(float(mx))
+            true_y.append(float(my))
+
+            pred_x.append(float(px))
+            pred_y.append(float(py))
+
+            est_x.append(float(ux))
+            est_y.append(float(uy))
+
+            i += 1
 
         cv2.imshow('image', frame)
 
         if cv2.waitKey(2) & 0xFF == ord('q'):
-            VideoCap.release()
-            cv2.destroyAllWindows()
             break
 
         cv2.waitKey(HiSpeed-ControlSpeedVar+1)
 
+    VideoCap.release()
+    cv2.destroyAllWindows()
+
+    # -------- Plot results --------
+
+    plt.figure()
+
+    plt.subplot(2,1,1)
+    plt.title("X Position vs Time")
+    plt.plot(frame_idx, true_x, label="Measured", color='orange')
+    plt.plot(frame_idx, pred_x, label="Predicted", color='blue')
+    plt.plot(frame_idx, est_x, label="Estimated", color='red')
+    plt.ylabel("X Position")
+    plt.legend()
+    plt.grid()
+
+    plt.subplot(2,1,2)
+    plt.title("Y Position vs Time")
+    plt.plot(frame_idx, true_y, label="Measured", color='orange')
+    plt.plot(frame_idx, pred_y, label="Predicted", color='blue')
+    plt.plot(frame_idx, est_y, label="Estimated", color='red')
+    plt.ylabel("Y Position")
+    plt.xlabel("Frame")
+    plt.legend()
+    plt.grid()
+
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == "__main__":
-    # execute main
     main()
