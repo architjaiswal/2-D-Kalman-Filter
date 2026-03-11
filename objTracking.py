@@ -10,6 +10,7 @@
 import cv2
 from Detector import detect
 from KalmanFilter import KalmanFilter
+from upgraded_kalman import KalmanFilter_upgraded
 import matplotlib.pyplot as plt
 
 def main():
@@ -19,7 +20,8 @@ def main():
     ControlSpeedVar = 100
     HiSpeed = 100
 
-    KF = KalmanFilter(0.1, 1, 1, 1, 0.1, 0.1)
+    # KF = KalmanFilter(0.01, 1, 1, 1, 0.1, 0.1)
+    KF = KalmanFilter_upgraded(0.01, 1, 0.1, 0.1)
 
     debugMode = 1
 
